@@ -1,5 +1,44 @@
-[![Netlify Status](https://api.netlify.com/api/v1/badges/b5c3c6d7-3b91-49e0-b7c7-0daf110384d6/deploy-status)](https://app.netlify.com/sites/showstatus/deploys)
-
 ## ReadMe
 
-Soon...
+Front-end (mostly) library for OAuth 2 implicit granting. Also can handle authorization code however it requires your own intermediary endpoint. It is described below.
+
+TODO: Refresh token
+
+Uses Redux and redux-promise-middleware. To have it set up with your Redux store, first include combinedOauthReducerHash function with service name argument as a reducer. Then for configuring the store, import combinedOauthStateHash helper function for the initial states which come from Local Storage. Include the oauth2Middleware middleware. Include redux-promise-middleware. Example code:
+```js
+// Reducer File
+import { combinedOauthReducerHash } from 'oauth2-redux';
+export default rootReducer = combineReducers( {
+  ...combinedOauthReducerHash( 'serviceOne' ), 
+  ...combinedOauthReducerHash( 'serviceTwo' ) 
+} );
+```
+```js
+// Configure Store file
+import promise from 'redux-promise-middleware';
+import { oauth2Middleware, combinedOauthStateHash } from 'oauth2-redux';
+const middlewares = [ promise, oauth2Middleware ];
+const initialState = {
+  ...combinedOauthStateHash( 'serviceOne' ), 
+  ...combinedOauthStateHash( 'serviceTwo' ) 
+};
+
+// Pass initialState as second argument to createStore.
+// Pass middlewares as third, last argument with applyMiddlewares
+```
+
+There's a barebones React component example using the library and the calling of the React component in the examples folder.
+
+### Authorization Code
+
+This requires your own endpoint. Have to send the second step url with the code to get an access token as a POST request to a url defined in config as "backend_url". Example serverless code is at https://github.com/inoicouldalwaysturn2u/netlify-express, specifically https://github.com/inoicouldalwaysturn2u/netlify-express/blob/master/express/server.js. The specific endpoint code is as follows and cors is used as well:
+```js
+router.post( '/auth-code', ( req, res ) => {
+  Axios.post( req.body.url )
+    .then( response => {
+      res.json( { status: response.status, ...response.data } ) 
+    } )
+} );
+```
+
+You can use the given default endpoint of https://atsexpress.atextbooksituation.com/.netlify/functions/server/auth-code or use the code of the forked netlify-express at https://github.com/inoicouldalwaysturn2u/netlify-express. It has a deploy to Netlify button for convenience that is below as well.
